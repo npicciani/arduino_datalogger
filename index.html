@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Temperature Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Real-Time Temperature Graph</h1>
+    <!-- Canvas for the chart -->
+    <canvas id="temperatureChart" width="800" height="400"></canvas>
+
+    <script>
+        // JavaScript goes here
+        async function fetchCSVData(url) {
+            const response = await fetch(url);
+            const text = await response.text();
+            const lines = text.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
+            const totalEvents = parseInt(lines[0], 10); // First line is the total events
+            const temperatures = lines.slice(1).map(Number); // Remaining lines are temperature values
+            return { totalEvents, temperatures };
+        }
+
+        const ctx = document.getElementById('temperatureChart').getContext('2d');
+        const temperatureChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Temperature',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Time / Index' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Temperature (°C)' }
+                    }
+                }
+            }
+        });
+
+        async function updateChart() {
+            const url = 'path/to/your/temperature_events.csv'; // Replace with the actual URL
+            const { temperatures } = await fetchCSVData(url);
+            const labels = Array.from({ length: temperatures.length }, (_, i) => i + 1); // Labels: [1, 2, 3, ...]
+            temperatureChart.data.labels = labels;
+            temperatureChart.data.datasets[0].data = temperatures;
+            temperatureChart.update();
+        }
+
+        setInterval(updateChart, 5000);
+        updateChart();
+    </script>
+</body>
+</html>
